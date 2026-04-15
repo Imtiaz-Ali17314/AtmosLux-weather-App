@@ -3,42 +3,305 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Weather App</title>
+    <meta name="description" content="AtmosLux — A luxurious, real-time weather experience. Search any city worldwide and get stunning live weather data with beautiful dynamic visuals." />
+    <meta name="keywords" content="weather app, real-time weather, forecast, temperature, humidity, wind speed" />
+    <title>AtmosLux — Premium Weather Experience</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
   </head>
-  <body>
-    <div class="card">
-      <div class="search">
-        <input
-          type="text"
-          placeholder="enter city name here..."
-          spellcheck="false"
-        />
-        <button><img src="images/search.png" alt="Search" /></button>
-      </div>
-      <div class="error">Invalid city name</div>
+  <body class="weather-clear">
 
-      <div class="weather">
-        <img src="images/rain.png" class="weather-icon" />
-        <h1 class="temp">22°C</h1>
-        <h2 class="city">Gilgit Baltistan</h2>
-        <div class="details">
-          <div class="col">
-            <img src="images/humidity.png" />
-            <div>
-              <p class="humidity">50%</p>
-              <p>Humidity</p>
-            </div>
+    <!-- Animated Background Canvas -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Floating Particles -->
+    <div class="particles-container" id="particles-container"></div>
+
+    <!-- Main App Container -->
+    <div class="app-wrapper">
+
+      <!-- Header -->
+      <header class="app-header">
+        <div class="brand">
+          <div class="brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 3v1m0 16v1M4.22 4.22l.7.7m12.16 12.16l.7.7M3 12h1m16 0h1M4.22 19.78l.7-.7M18.36 5.64l.7-.7"/>
+              <circle cx="12" cy="12" r="4"/>
+            </svg>
           </div>
-          <div class="col">
-            <img src="images/wind.png" />
-            <div>
-              <p class="wind">15 km/h</p>
-              <p>Wind</p>
+          <span class="brand-name">AtmosLux</span>
+        </div>
+        <div class="header-actions">
+          <button class="unit-toggle" id="unit-toggle" title="Toggle temperature unit">
+            <span class="unit-c active" id="unit-c">°C</span>
+            <span class="unit-divider">/</span>
+            <span class="unit-f" id="unit-f">°F</span>
+          </button>
+          <button class="geo-btn" id="geo-btn" title="Use my location">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+              <circle cx="12" cy="12" r="9" stroke-dasharray="4 2"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Search Section -->
+      <section class="search-section">
+        <div class="search-container">
+          <div class="search-box" id="search-box">
+            <svg class="search-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input
+              type="text"
+              id="city-input"
+              placeholder="Search for a city..."
+              spellcheck="false"
+              autocomplete="off"
+            />
+            <button class="search-btn" id="search-btn" aria-label="Search weather">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </button>
+          </div>
+          <div class="error-msg" id="error-msg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span id="error-text">City not found. Please try again.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Loading Spinner -->
+      <div class="loading-screen" id="loading-screen">
+        <div class="loader-ring"></div>
+        <p class="loading-text">Fetching weather data...</p>
+      </div>
+
+      <!-- Welcome State -->
+      <div class="welcome-state" id="welcome-state">
+        <div class="welcome-icon">
+          <svg viewBox="0 0 100 100" fill="none">
+            <circle cx="50" cy="50" r="45" stroke="currentColor" stroke-width="1" opacity="0.2"/>
+            <circle cx="50" cy="50" r="30" stroke="currentColor" stroke-width="1" opacity="0.3"/>
+            <path d="M50 20 C50 20 70 35 70 50 C70 65 60 75 50 80 C40 75 30 65 30 50 C30 35 50 20 50 20Z" fill="currentColor" opacity="0.1"/>
+            <circle cx="50" cy="50" r="8" fill="currentColor" opacity="0.5"/>
+            <path d="M50 20v8M50 72v8M20 50h8M72 50h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+          </svg>
+        </div>
+        <h2 class="welcome-title">Discover Your Weather</h2>
+        <p class="welcome-subtitle">Search any city or use your location to get real-time weather intelligence</p>
+      </div>
+
+      <!-- Main Weather Display -->
+      <main class="weather-main" id="weather-main">
+
+        <!-- Hero Weather Card -->
+        <div class="hero-card glass-card">
+          <div class="location-row">
+            <div class="location-info">
+              <svg viewBox="0 0 24 24" fill="currentColor" class="pin-icon">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+              <h1 class="city-name" id="city-name">London</h1>
+              <span class="country-code" id="country-code">GB</span>
+            </div>
+            <div class="date-display" id="date-display">Tuesday, April 15</div>
+          </div>
+
+          <div class="weather-hero">
+            <div class="weather-icon-wrap">
+              <div class="icon-glow"></div>
+              <img src="images/clear.png" class="weather-icon-main" id="weather-icon-main" alt="Weather condition" />
+            </div>
+            <div class="temp-display">
+              <div class="temp-main" id="temp-main">22°</div>
+              <div class="temp-meta">
+                <div class="condition-label" id="condition-label">Clear Sky</div>
+                <div class="feels-like">Feels like <span id="feels-like">20°</span></div>
+                <div class="temp-range">
+                  <span class="temp-high">↑ <span id="temp-high">25°</span></span>
+                  <span class="temp-low">↓ <span id="temp-low">18°</span></span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+
+          <div class="stat-card glass-card" id="stat-humidity">
+            <div class="stat-icon-wrap humidity-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <div class="stat-label">Humidity</div>
+              <div class="stat-value" id="humidity-val">50<span class="stat-unit">%</span></div>
+              <div class="stat-bar-wrap">
+                <div class="stat-bar">
+                  <div class="stat-bar-fill" id="humidity-bar" style="width:50%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stat-card glass-card" id="stat-wind">
+            <div class="stat-icon-wrap wind-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <div class="stat-label">Wind Speed</div>
+              <div class="stat-value" id="wind-val">15<span class="stat-unit" id="wind-unit"> km/h</span></div>
+              <div class="wind-direction" id="wind-dir">→ East</div>
+            </div>
+          </div>
+
+          <div class="stat-card glass-card" id="stat-visibility">
+            <div class="stat-icon-wrap visibility-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <div class="stat-label">Visibility</div>
+              <div class="stat-value" id="visibility-val">10<span class="stat-unit"> km</span></div>
+              <div class="visibility-label" id="visibility-label">Excellent</div>
+            </div>
+          </div>
+
+          <div class="stat-card glass-card" id="stat-pressure">
+            <div class="stat-icon-wrap pressure-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 6v6l4 2"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <div class="stat-label">Pressure</div>
+              <div class="stat-value" id="pressure-val">1013<span class="stat-unit"> hPa</span></div>
+              <div class="pressure-label" id="pressure-label">Normal</div>
+            </div>
+          </div>
+
+          <div class="stat-card glass-card sunrise-card" id="stat-sunrise">
+            <div class="stat-icon-wrap sunrise-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="4"/>
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <div class="stat-label">Sunrise</div>
+              <div class="stat-value time-val" id="sunrise-val">6:23 AM</div>
+            </div>
+          </div>
+
+          <div class="stat-card glass-card sunset-card" id="stat-sunset">
+            <div class="stat-icon-wrap sunset-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M17 18a5 5 0 0 0-10 0"/>
+                <line x1="12" y1="2" x2="12" y2="9"/>
+                <line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/>
+                <line x1="1" y1="18" x2="3" y2="18"/>
+                <line x1="21" y1="18" x2="23" y2="18"/>
+                <line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/>
+                <line x1="23" y1="22" x2="1" y2="22"/>
+                <polyline points="16 5 12 9 8 5"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <div class="stat-label">Sunset</div>
+              <div class="stat-value time-val" id="sunset-val">8:12 PM</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 5-Day Forecast -->
+        <div class="forecast-section glass-card">
+          <div class="section-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <h2 class="section-title">5-Day Forecast</h2>
+          </div>
+          <div class="forecast-list" id="forecast-list">
+            <!-- Filled by JS -->
+          </div>
+        </div>
+
+        <!-- Air Quality / Extra Info -->
+        <div class="extra-info-section">
+          <div class="info-card glass-card">
+            <div class="section-header">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M2 12h6a4 4 0 0 0 4-4V2"/>
+                <path d="M2 17h9a5 5 0 0 0 5-5V5"/>
+                <path d="M2 22h12a6 6 0 0 0 6-6V8"/>
+              </svg>
+              <h2 class="section-title">Atmosphere</h2>
+            </div>
+            <div class="atmosphere-grid">
+              <div class="atmo-item">
+                <span class="atmo-label">Cloud Cover</span>
+                <span class="atmo-value" id="cloud-cover">20%</span>
+              </div>
+              <div class="atmo-item">
+                <span class="atmo-label">Dew Point</span>
+                <span class="atmo-value" id="dew-point">14°</span>
+              </div>
+              <div class="atmo-item">
+                <span class="atmo-label">Weather ID</span>
+                <span class="atmo-value" id="weather-id">800</span>
+              </div>
+              <div class="atmo-item">
+                <span class="atmo-label">Condition</span>
+                <span class="atmo-value" id="weather-desc">Clear sky</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-card glass-card">
+            <div class="section-header">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+              <h2 class="section-title">Live Pulse</h2>
+            </div>
+            <div class="pulse-display">
+              <canvas id="pulse-canvas" width="280" height="80"></canvas>
+              <div class="pulse-legend">
+                <span>Temp variation throughout the day</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+
+      <!-- Footer -->
+      <footer class="app-footer">
+        <p>Powered by <a href="https://openweathermap.org" target="_blank" rel="noopener">OpenWeatherMap</a> &nbsp;·&nbsp; Imtiaz Ali</p>
+      </footer>
+
     </div>
 
     <script src="script.js"></script>
