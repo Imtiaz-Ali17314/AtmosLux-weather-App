@@ -154,8 +154,8 @@ Weather-App/
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-username/Weather-App.git
-cd Weather-App
+git clone https://github.com/Imtiaz-Ali17314/AtmosLux-weather-App
+cd AtmosLux-weather-App
 ```
 
 ### 2. Get a Free API Key
